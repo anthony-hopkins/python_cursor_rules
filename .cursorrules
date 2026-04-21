@@ -1,0 +1,312 @@
+# =============================================================================
+# Cursor rules — Python + Jinja2 + HTMX (enterprise-oriented)
+# =============================================================================
+#
+# PURPOSE
+# -------
+# This file configures Cursor for a Python web stack: server-rendered HTML with
+# Jinja2 templates, HTMX for interactivity without a JS framework, and AI
+# guidance toward stdlib-first code, security middleware, and consistent docs.
+#
+# FORMAT
+# ------
+# YAML with a single top-level key `rules`, whose value is a list of rule
+# objects. Cursor merges these entries for editor hints, snippets, autocomplete,
+# and AI system/context behavior. Line comments (#) are YAML comments only;
+# they are not sent to the AI unless duplicated inside ai_context.notes or
+# ai_behavior.rules string blocks.
+#
+# FIELD REFERENCE (per rule entry)
+# --------------------------------
+# id              Unique string. Use kebab-case; helps you grep and edit.
+# description     Short human summary (optional but recommended).
+# patterns        Glob list; when present, scopes file-type / context rules.
+# language        Editor language id (e.g. python, jinja-html).
+# ai_context      Extra model context for matching or global notes:
+#   enabled       true/false
+#   weight        optional: e.g. high — relative emphasis if supported
+#   notes         Multiline string with stack-specific reminders
+# autocomplete    Structured completions (e.g. HTML attribute names).
+# snippets        List of { trigger, body } for tab-triggered expansions.
+# ai_behavior     Instructions to the AI, often global:
+#   priority      high | medium | low — ordering hint when rules conflict
+#   rules         Multiline string, usually markdown bullet list
+#
+# TIP: Keep ai_behavior.rules concise and actionable; long essays dilute focus.
+# =============================================================================
+
+rules:
+
+  # ---------------------------------------------------------------------------
+  # SECTION: File type & language mapping
+  # ---------------------------------------------------------------------------
+  # Maps globs to languages so syntax highlighting, parsing, and AI file
+  # context match Jinja templates vs plain HTML. HTML is included because in this
+  # stack it is often executed as Jinja template text, not static HTML only.
+  # ---------------------------------------------------------------------------
+
+  - id: python-jinja-filetypes
+    description: Treat HTML-like files as Jinja2 templates
+    patterns:
+      - "*.jinja"     # explicit Jinja extension
+      - "*.jinja2"
+      - "*.html.j2"   # common “template engine” suffix
+      - "*.j2"
+      - "*.tpl"       # generic template extension
+      - "*.html"      # often used with Jinja2 in Flask/FastAPI/Starlette
+    language: jinja-html
+    ai_context:
+      enabled: true
+      weight: high
+      notes: |
+        These files use Jinja2 template syntax. Maintain awareness of:
+        - {{ variable }}
+        - {% if condition %} ... {% endif %}
+        - {% for item in items %} ... {% endfor %}
+        - {% extends "base.html" %} and {% block name %} ... {% endblock %}
+        - {% include "partial.html" %}
+        - Filters: {{ value | e }} (escape), {{ html | safe }} (trusted markup only)
+        - Macros: {% macro name(args) %} ... {% endmacro %}
+        Templates are rendered with Jinja2 (or framework-integrated Jinja2).
+
+  - id: python-source-files
+    description: Python source files for web + HTMX apps
+    patterns:
+      - "*.py"
+    language: python
+    ai_context:
+      enabled: true
+      notes: |
+        Prefer Python's standard library for core concerns; use a small ASGI/WSGI
+        stack for HTTP when appropriate.
+        Prefer:
+          - asyncio (async apps), ssl, secrets, hashlib, logging
+          - pathlib, dataclasses, typing
+          - Template rendering via Jinja2 integrated with your web layer
+        Avoid heavy frameworks unless the project already depends on them.
+
+  # ---------------------------------------------------------------------------
+  # SECTION: Jinja2 template semantics (global AI context)
+  # ---------------------------------------------------------------------------
+  # No patterns: reinforces template philosophy whenever this context is merged.
+  # Encourages layout via extends/block/include and safe HTML, not JS-like logic.
+  # ---------------------------------------------------------------------------
+
+  - id: python-jinja-syntax
+    description: Improve AI understanding of Jinja2 template constructs
+    ai_context:
+      enabled: true
+      notes: |
+        Jinja2 templates are logic-light and data-driven.
+        Avoid JS-like logic and fat business rules in templates.
+        Encourage:
+          - {% extends %} / {% block %} for layout inheritance
+          - Small, composable partials via {% include %} or macros
+          - Explicit escaping; use | safe only for trusted HTML
+
+  # ---------------------------------------------------------------------------
+  # SECTION: HTMX — autocomplete for attributes
+  # ---------------------------------------------------------------------------
+  # Feeds attribute name suggestions in HTML/HTMX markup. Pair with snippets
+  # below for full patterns (buttons, forms, lazy regions).
+  # ---------------------------------------------------------------------------
+
+  - id: htmx-attributes
+    description: Provide autocomplete for HTMX attributes
+    autocomplete:
+      attributes:
+        - hx-get          # load from URL (GET)
+        - hx-post         # submit / mutate (POST)
+        - hx-put
+        - hx-delete
+        - hx-patch
+        - hx-target       # CSS selector for swap target
+        - hx-trigger      # e.g. click, load, revealed
+        - hx-swap         # innerHTML, outerHTML, etc.
+        - hx-push-url     # history / URL bar
+        - hx-select       # pick fragment from response
+        - hx-select-oob   # out-of-band swaps
+        - hx-vals         # extra parameters
+        - hx-confirm      # user confirmation
+        - hx-boost        # progressively enhance links/forms
+        - hx-indicator    # loading UI
+        - hx-headers      # request headers
+        - hx-ext          # extension hooks
+    ai_context:
+      enabled: true
+      notes: |
+        HTMX is used instead of JavaScript.
+        Encourage server-rendered partials and HTMX-driven interactivity.
+
+  # ---------------------------------------------------------------------------
+  # SECTION: Snippets — Jinja2
+  # ---------------------------------------------------------------------------
+  # Prefix "ji" = Jinja. Placeholders use ${n:label} tab stop style.
+  # ${0} is typically the final cursor position after expansion.
+  # ---------------------------------------------------------------------------
+
+  - id: python-jinja-snippets
+    description: Snippets for Jinja2 template constructs
+    snippets:
+      - trigger: jiif
+        body: |
+          {% if ${1:condition} %}
+            ${0}
+          {% endif %}
+
+      - trigger: jifor
+        body: |
+          {% for ${1:item} in ${2:items} %}
+            ${0}
+          {% endfor %}
+
+      - trigger: jiblock
+        body: |
+          {% block ${1:name} %}
+            ${0}
+          {% endblock %}
+
+      - trigger: jiextends
+        body: |
+          {% extends "${1:base.html}" %}
+
+      - trigger: jiinclude
+        body: |
+          {% include "${1:partial.html}" %}
+
+      - trigger: jimacro
+        body: |
+          {% macro ${1:name}(${2:args}) %}
+            ${0}
+          {% endmacro %}
+
+  # ---------------------------------------------------------------------------
+  # SECTION: Snippets — HTMX
+  # ---------------------------------------------------------------------------
+  # hx-${1:get} lets you type get/post/put etc. after expansion.
+  # ---------------------------------------------------------------------------
+
+  - id: htmx-snippets
+    description: Snippets for common HTMX patterns
+    snippets:
+      - trigger: hxbtn
+        body: |
+          <button
+            hx-${1:get}="${2:/endpoint}"
+            hx-target="${3:#target}"
+            hx-swap="${4:innerHTML}"
+          >
+            ${0:Click}
+          </button>
+
+      - trigger: hxform
+        body: |
+          <form hx-post="${1:/submit}" hx-target="${2:#result}" hx-swap="innerHTML">
+            ${0}
+          </form>
+
+      - trigger: hxload
+        body: |
+          <div
+            hx-get="${1:/load}"
+            hx-trigger="revealed"
+            hx-swap="innerHTML"
+          >
+            ${0}
+          </div>
+
+  # ---------------------------------------------------------------------------
+  # SECTION: AI behavior — stack & UI
+  # ---------------------------------------------------------------------------
+  # ai_behavior applies broadly (not file-scoped unless Cursor merges with path).
+  # priority: higher = more insistence when instructions could conflict.
+  # ---------------------------------------------------------------------------
+
+  - id: ai-behavior-python-enterprise
+    ai_behavior:
+      priority: high
+      rules: |
+        - You are an expert enterprise Python developer.
+        - Prefer Python's standard library for crypto, logging, SSL/TLS context, and concurrency primitives.
+        - Use Jinja2 for server-rendered HTML; keep views thin and testable.
+        - Avoid JavaScript entirely; use HTMX for interactivity.
+
+  - id: ai-behavior-css-aws-theme
+    ai_behavior:
+      priority: medium
+      rules: |
+        - Use modern, idiomatic CSS.
+        - Use AWS color scheme:
+          - Background: #252F3E
+          - Accents: lighter greys
+          - Buttons: #FF9900
+        - Ensure responsive, accessible design.
+
+  - id: ai-behavior-readme-and-comments
+    ai_behavior:
+      priority: high
+      rules: |
+        - Always update README.md when generating or modifying code.
+        - README.md must fully explain functionality, setup, and architecture.
+        - Comment all files thoroughly and consistently.
+
+  # ---------------------------------------------------------------------------
+  # SECTION: AI behavior — security & middleware
+  # ---------------------------------------------------------------------------
+  # Aligns new code with: rate limits (time/threading/asyncio + stdlib primitives),
+  # CSRF (secrets, cookies, validate mutating methods), TLS (ssl, HSTS, redirect),
+  # and composable ASGI/WSGI middleware + logging module.
+  # ---------------------------------------------------------------------------
+
+  - id: ai-behavior-security-middleware
+    description: Middleware patterns for Python web apps (ASGI/WSGI-friendly)
+    ai_behavior:
+      priority: high
+      rules: |
+        # Rate Limiting
+        - Implement deterministic rate limiting with clear, testable logic:
+            - Use time.monotonic(), threading locks, or asyncio primitives as appropriate.
+            - Use IP-based or token-based buckets.
+            - Middleware must reject requests with proper HTTP status codes (e.g. 429).
+        - Prefer stdlib-based implementations over opaque third-party rate limiters unless justified.
+
+        # CSRF Protection
+        - Implement CSRF protection using:
+            - secrets.token_urlsafe() or secrets.token_bytes() for tokens.
+            - HttpOnly, Secure, SameSite cookies where applicable.
+            - Token validation on POST, PUT, PATCH, DELETE.
+        - Never rely on JavaScript for CSRF handling.
+        - Encourage double-submit cookie pattern or form-hidden-token pattern.
+
+        # TLS Enforcement
+        - Configure TLS with the ssl module or the server's documented SSL context.
+        - Encourage:
+            - Minimum TLS 1.2+ in production.
+            - Strong cipher configuration via ssl context or reverse proxy.
+            - HSTS headers.
+            - Redirect HTTP → HTTPS.
+        - Avoid self-signed certs except in local development.
+
+        # Middleware Architecture
+        - Middleware must be:
+            - Composable
+            - Stateless when possible
+            - Explicit and easy to test
+        - Encourage ASGI middleware stacking or WSGI middleware patterns consistent with the chosen stack.
+        - Use Python's logging module (structured logs where appropriate); avoid print in request paths.
+
+  # ---------------------------------------------------------------------------
+  # SECTION: AI context — template rendering & HTMX responses
+  # ---------------------------------------------------------------------------
+  # Reminds the model to return partial HTML for HTMX, bind context dicts, stay safe.
+  # ---------------------------------------------------------------------------
+
+  - id: ai-context-template-rendering
+    ai_context:
+      enabled: true
+      notes: |
+        - Render templates using Jinja2 (or framework-integrated Jinja2).
+        - Use partials for HTMX responses.
+        - Avoid JavaScript entirely.
+        - Pass plain dicts, dataclasses, or small view models as template context.
+        - Maintain safe HTML practices (escape by default; | safe only for trusted content).
