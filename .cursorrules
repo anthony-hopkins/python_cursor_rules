@@ -82,6 +82,7 @@ rules:
         Prefer:
           - asyncio (async apps), ssl, secrets, hashlib, logging
           - pathlib, dataclasses, typing
+          - requests
           - Template rendering via Jinja2 integrated with your web layer
         Avoid heavy frameworks unless the project already depends on them.
 
@@ -294,6 +295,19 @@ rules:
             - Explicit and easy to test
         - Encourage ASGI middleware stacking or WSGI middleware patterns consistent with the chosen stack.
         - Use Python's logging module (structured logs where appropriate); avoid print in request paths.
+
+  - id: ai-behavior-env-and-secrets
+    description: .env templates, local secrets, and sensitive configuration
+    ai_behavior:
+      priority: high
+      rules: |
+        # .env files and sensitive data
+        - Maintain a committed template only (e.g. `.env.example`): variable names, short comments, and non-secret placeholders. Never commit real API keys, tokens, passwords, or private URLs.
+        - Document in README.md: copy `.env.example` to `.env`, fill in values locally, and run the app; state that `.env` is not committed.
+        - List `.env` in `.gitignore` (and other local secret paths as needed). Optionally ignore `.env.*` overrides if the team uses them; keep the example template committed.
+        - For Python, prefer `python-dotenv`: call `load_dotenv()` at the start of CLI entry points or app startup so `.env` populates `os.environ`. Library code that only reads `os.environ` should not load `.env` unless that behavior is explicit and documented; callers may call `load_dotenv()` first when using a `.env` file.
+        - In production and CI, inject secrets via the process environment, a secrets manager, or the platform’s secret store—not by committing or copying `.env` to servers.
+        - Never log secret values; do not put tokens or passwords in exception messages, traces, or docs (use placeholders like `your-api-token-here`).
 
   # ---------------------------------------------------------------------------
   # SECTION: AI context — template rendering & HTMX responses
