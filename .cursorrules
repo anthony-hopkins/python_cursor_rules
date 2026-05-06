@@ -232,16 +232,23 @@ rules:
         - Use Jinja2 for server-rendered HTML; keep views thin and testable.
         - Avoid JavaScript entirely; use HTMX for interactivity.
 
-  - id: ai-behavior-css-aws-theme
-    ai_behavior:
-      priority: medium
-      rules: |
-        - Use modern, idiomatic CSS.
-        - Use AWS color scheme:
-          - Background: #252F3E
-          - Accents: lighter greys
-          - Buttons: #FF9900
-        - Ensure responsive, accessible design.
+ - id: ai-behavior-css-brand-theme
+ ai_behavior:
+ priority: medium
+ rules: |
+ - Use modern, idiomatic CSS.
+ - Use the company-logo color scheme:
+ - Background (black):                   #000000
+ - Green ("metro"), primary action:      #00D84A
+ - Vibrant purple ("net"), secondary:    #8A2BE2
+ - Soft purple (tagline / links):        #A64DFF
+ - Divider / subtle gray:                #333333
+ - Default body text on the black background should be near-white
+ (e.g. #F5F5F7) with muted secondary text around #B8B8C8.
+ - Use the green as the primary "go" / submit accent; reserve purple
+ for headings, focus rings, and link/text accents so the green
+ remains the unique action signal.
+ - Ensure responsive, accessible design (WCAG AA contrast).
 
   - id: ai-behavior-readme-and-comments
     ai_behavior:
