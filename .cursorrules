@@ -232,23 +232,23 @@ rules:
         - Use Jinja2 for server-rendered HTML; keep views thin and testable.
         - Avoid JavaScript entirely; use HTMX for interactivity.
 
- - id: ai-behavior-css-brand-theme
- ai_behavior:
- priority: medium
- rules: |
- - Use modern, idiomatic CSS.
- - Use the company-logo color scheme:
- - Background (black):                   #000000
- - Green ("metro"), primary action:      #00D84A
- - Vibrant purple ("net"), secondary:    #8A2BE2
- - Soft purple (tagline / links):        #A64DFF
- - Divider / subtle gray:                #333333
- - Default body text on the black background should be near-white
- (e.g. #F5F5F7) with muted secondary text around #B8B8C8.
- - Use the green as the primary "go" / submit accent; reserve purple
- for headings, focus rings, and link/text accents so the green
- remains the unique action signal.
- - Ensure responsive, accessible design (WCAG AA contrast).
+  - id: ai-behavior-css-brand-theme
+    ai_behavior:
+      priority: medium
+      rules: |
+        - Use modern, idiomatic CSS.
+        - Use the company-logo color scheme:
+            - Background (black):                   #000000
+            - Green ("metro"), primary action:      #00D84A
+            - Vibrant purple ("net"), secondary:    #8A2BE2
+            - Soft purple (tagline / links):        #A64DFF
+            - Divider / subtle gray:                #333333
+        - Default body text on the black background should be near-white
+          (e.g. #F5F5F7) with muted secondary text around #B8B8C8.
+        - Use the green as the primary "go" / submit accent; reserve purple
+          for headings, focus rings, and link/text accents so the green
+          remains the unique action signal.
+        - Ensure responsive, accessible design (WCAG AA contrast).
 
   - id: ai-behavior-readme-and-comments
     ai_behavior:
@@ -257,6 +257,34 @@ rules:
         - Always update README.md when generating or modifying code.
         - README.md must fully explain functionality, setup, and architecture.
         - Comment all files thoroughly and consistently.
+
+  - id: ai-behavior-unit-testing
+    description: Unit testing standards for Python code changes
+    ai_behavior:
+      priority: high
+      rules: |
+        # Unit Testing Standards
+        - Use `pytest` for all new and updated Python tests.
+        - Create or update unit tests whenever code behavior changes.
+        - Keep tests deterministic: avoid real network, sleep-based timing,
+          uncontrolled filesystem side effects, and shared mutable state.
+        - Follow Arrange-Act-Assert and clear names like
+          `test_<unit>_<scenario>_<expected_result>`.
+        - Cover happy paths, edge cases, and failure paths for each public behavior.
+        - Mock only external boundaries (network, clock, environment, filesystem,
+          subprocesses); do not over-mock internal logic.
+
+  - id: ai-behavior-test-coverage
+    description: Coverage policy and quality gates for Python tests
+    ai_behavior:
+      priority: high
+      rules: |
+        # Coverage Policy
+        - Use `pytest-cov` for coverage collection in local runs and CI.
+        - Enforce CI minimum coverage with `--cov-fail-under=90`.
+        - Prefer branch coverage with `--cov-branch` in addition to line coverage.
+        - Coverage percentage is a gate, not a goal; tests must assert meaningful behavior.
+        - Add regression tests for every bug fix to prevent reintroduction.
 
   # ---------------------------------------------------------------------------
   # SECTION: AI behavior — security & middleware
